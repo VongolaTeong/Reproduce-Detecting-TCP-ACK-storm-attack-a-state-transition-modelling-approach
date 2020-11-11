@@ -6,7 +6,8 @@ Final Project for CS339 Computer Networks 2020 Fall
 
 * [About the Project](#about-the-project)
 * [Usage](#usage)
-
+* [Team Members](#Team-Members)
+* [License](#License)
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
