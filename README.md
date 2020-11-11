@@ -10,10 +10,10 @@ Final Project for CS339 Computer Networks 2020 Fall
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-This project is the team project of CS410 CS339 Computer Networks 2020 Fall
+This project is the team project of CS339 Computer Networks 2020 Fall
 in Shanghai Jiao Tong University. It requires us to reproduce a scientific
-article related to computer networks. Our team choose the article "Detecting TCP ACK storm attack: a state
-transition modelling approach" written by Neminath Hubballi1 and Jonathan Santini. 
+article related to computer networks. Our team aim to reproduce the article "Detecting TCP ACK storm attack: a state
+transition modelling approach" written by Neminath Hubballi and Jonathan Santini. 
 
 <!-- USAGE -->
 ## Usage
