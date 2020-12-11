@@ -13,7 +13,7 @@ void capture_packet1(pcap_t* device)
         return;
     }
 
-    //output the pacaket length byte and time
+    //output the packet length byte and time
     printf("Packet length: %d\n", packet.len);  
     printf("Number of bytes: %d\n", packet.caplen);  
     printf("Recieved time: %s\n", ctime((const time_t*)&packet.ts.tv_sec)); 
@@ -49,7 +49,7 @@ int main()
 {
     char *dev, errbuf[1024];
     char select='a';
-    printf("select(dispaly the packet in detail)/n:( Y/N ?))");
+    printf("select(display the packet in detail)/n:( Y/N ?))");
     scanf("%c",&select);
     while(select!='Y'&&select!='y'&&select!='n'&&select!='N'){
         printf("input the error!\nplease input the Y/N/y/n:");
