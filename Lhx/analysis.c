@@ -53,6 +53,20 @@ typedef struct udp_hdr
 }udp_hdr;
 udp_hdr *udp;
 
+
+typedef struct connect
+{
+    int status;
+    int to_attack;
+    int ip[4];
+    u_int send_packet_ack;
+    u_int send_packet_seq;
+    u_int rcvd_packet_ack;
+    u_int rcvd_packet_seq;
+}conn;
+static conn connection[100];
+
+
 void pcap_callback(unsigned char * arg,const struct pcap_pkthdr *packet_header,const unsigned char *packet_content){
     static int id=1;
     printf("id=%d\n",id++);
@@ -88,9 +102,11 @@ void pcap_callback(unsigned char * arg,const struct pcap_pkthdr *packet_header,c
         printf("IPV4 is used\n");
         printf("IPV4 header information:\n");
         ip=(ip_hdr*)(packet_content+eth_len);
-        printf("source ip : %d.%d.%d.%d\n",ip->sourceIP[0],ip->sourceIP[1],ip->sourceIP[2],ip->sourceIP[3]);
+	printf("source ip : %d.%d.%d.%d\n",ip->sourceIP[0],ip->sourceIP[1],ip->sourceIP[2],ip->sourceIP[3]);
         printf("dest ip : %d.%d.%d.%d\n",ip->destIP[0],ip->destIP[1],ip->destIP[2],ip->destIP[3]);
-        if(ip->protocol==6){
+
+
+	if(ip->protocol==6){
             printf("tcp is used:\n");
             tcp=(tcp_hdr*)(packet_content+eth_len+ip_len);
             printf("tcp source port : %u\n",tcp->sport);
@@ -112,6 +128,201 @@ void pcap_callback(unsigned char * arg,const struct pcap_pkthdr *packet_header,c
         printf("ipv6 is used\n");
     }
 
+    int flag_send_rcvd = 2;
+	if(ip->sourceIP[0]==192 && ip->sourceIP[1]==168 && ip->sourceIP[2]==133 && ip->sourceIP[3]==138){
+		printf("This packet is sent\n");
+		flag_send_rcvd = 0;
+	}
+	else if(ip->destIP[0]==192 && ip->destIP[1]==168 && ip->destIP[2]==133 && ip->destIP[3]==138){
+		printf("This packet is received\n");
+		flag_send_rcvd = 1;
+	}
+	
+	if(flag_send_rcvd != 0 && flag_send_rcvd != 1){
+		printf("Wrong flag_send_rcvd\n");
+	        return;
+	}
+
+	for(i=0; i<100; i++){
+		if(connection[i].ip[0] == -1){
+            printf("%dth item does not been used\n",i);
+			if(flag_send_rcvd == 0){
+                printf("%dth item first send a packet\n",i);
+				connection[i].ip[0] = ip->destIP[0];
+                printf("%dth item ip[0] known\n",i);
+				connection[i].ip[1] = ip->destIP[1];
+                printf("%dth item ip[1] known\n",i);
+				connection[i].ip[2] = ip->destIP[2];
+                printf("%dth item ip[2] known\n",i);
+				connection[i].ip[3] = ip->destIP[3];
+                printf("%dth item ip[3] known\n",i);
+                connection[i].send_packet_ack = tcp->ack;
+                printf("%dth item send_packet_ack update\n",i);
+                connection[i].send_packet_seq = tcp->seq;  
+                printf("%dth item send_packet_seq update\n",i);              
+			}
+			else{
+                printf("%dth item first receive a packet\n",i);
+				connection[i].ip[0] = ip->sourceIP[0];
+                printf("%dth item ip[0] known\n",i);
+				connection[i].ip[1] = ip->sourceIP[1];
+                printf("%dth item ip[1] known\n",i);
+				connection[i].ip[2] = ip->sourceIP[2];
+                printf("%dth item ip[2] known\n",i);
+				connection[i].ip[3] = ip->sourceIP[3];
+                printf("%dth item ip[3] known\n",i);
+                connection[i].rcvd_packet_ack = tcp->ack;
+                printf("%dth item rcvd_packet_ack update\n",i);
+                connection[i].rcvd_packet_seq = tcp->seq;
+                printf("%dth item rcvd_packet_seq update\n",i);
+			}
+            break;
+		}
+		else{
+			if(flag_send_rcvd == 0){
+                if(connection[i].ip[0] == ip->destIP[0] && connection[i].ip[1] == ip->destIP[1] && connection[i].ip[2] == ip->destIP[2] && connection[i].ip[3] == ip->destIP[3]){
+					connection[i].send_packet_ack = tcp->ack;
+                    connection[i].send_packet_seq = tcp->seq;
+                    printf("%dth item send_seq and send_ack update\n",i);
+                    if(connection[i].rcvd_packet_ack != 0){
+                        if(connection[i].send_packet_seq > connection[i].rcvd_packet_ack)
+                        {
+                            switch (connection[i].status)
+                            {
+                            case 0:
+                                connection[i].status = 1;
+                                printf("Status: q1\n");
+                                break;
+                            case 1:
+                                connection[i].status = 1;
+                                printf("Status: q1\n");
+                                break;
+                            case 2:
+                                connection[i].status = 1;
+                                connection[i].to_attack = 0;
+                                printf("Status: q1\n");
+                                break;
+
+                            default:
+                                printf("Status wrong!\n");
+                                return;
+                            }
+                        }
+                        if(connection[i].send_packet_seq == connection[i].rcvd_packet_ack)
+                        {
+                            switch (connection[i].status)
+                            {
+                            case 0:
+                                printf("Status: q0\n");
+                                break;
+                            case 1:
+                                printf("Status: q1\n");
+                                break;
+                            case 2:
+                                connection[i].status = 0;
+                                connection[i].to_attack = 0;
+                                printf("Status: q0\n");
+                                break;
+
+                            default:
+                                printf("Status wrong!\n");
+                                return;
+                            }
+                        }
+                        break;
+                    }
+				}
+                else continue;
+            }    
+            else if(flag_send_rcvd == 1){
+                if(connection[i].ip[0] == ip->sourceIP[0] && connection[i].ip[1] == ip->sourceIP[1] && connection[i].ip[2] == ip->sourceIP[2] && connection[i].ip[3] == ip->sourceIP[3]){
+                    connection[i].rcvd_packet_ack = tcp->ack;
+                    connection[i].rcvd_packet_seq = tcp->seq;
+                    printf("%dth item rcvd_seq and rcvd_ack update\n",i);
+                    if(connection[i].send_packet_ack != 0){
+                        if(connection[i].rcvd_packet_ack > connection[i].send_packet_seq)
+                        {
+                            
+                            switch (connection[i].status)
+                            {
+                            case 0:
+                                connection[i].status = 2;
+                                connection[i].status++;
+                                printf("Status: q2\n");
+                                break;
+                            case 1:
+                                connection[i].status = 2;
+                                connection[i].status++;
+                                printf("Status: q2\n");
+                                break;
+                            case 2:
+                                connection[i].status++;
+                                if(connection[i].status > 3){
+                                    printf("TCP Ack-storm DoS attack detected!!!!!! \n\n");
+                                    return;
+                                }
+                                printf("Status: q2\n");
+                                break;
+
+                            default:
+                                printf("Status wrong!\n");
+                                return;
+                            }
+                        }
+                        
+                        if(connection[i].rcvd_packet_ack == connection[i].rcvd_packet_seq)
+                        {
+                            switch (connection[i].status)
+                            {
+                            case 0:
+                                printf("Status: q0\n");
+                                break;
+                            case 1:
+                                connection[i].status = 0;
+                                printf("Status: q0\n");
+                                break;
+                            case 2:
+                                connection[i].status = 0;
+                                connection[i].to_attack = 0;
+                                printf("Status: q0\n");
+                                break;
+
+                            default:
+                                printf("Status wrong!\n");
+                                return;
+                            }
+                        }
+                        
+                        if(connection[i].rcvd_packet_ack < connection[i].rcvd_packet_seq)
+                        {
+                            switch (connection[i].status)
+                            {
+                            case 0:
+                                printf("Status: q0\n");
+                                break;
+                            case 1:
+                                connection[i].status = 0;
+                                printf("Status: q0\n");
+                                break;
+                            case 2:
+                                connection[i].status = 0;
+                                connection[i].to_attack = 0;
+                                printf("Status: q0\n");
+                                break;
+
+                            default:
+                                printf("Status wrong!\n");
+                                return;
+                            }
+                       }
+                    }
+                }
+                else continue;
+		    }
+            break;
+        }
+	}
+
     printf("------------------done-------------------\n");
     printf("\n\n");
 }
@@ -120,6 +331,17 @@ int main(int argc, char *argv[])
 {
     char *dev,errbuf[1024];
 
+    for (int i = 0; i < 100; i++)
+    {
+        connection[i].status = 0;
+        connection[i].to_attack = 0;
+	    connection[i].ip[0] = -1;
+        connection[i].send_packet_ack = 0;
+        connection[i].send_packet_seq = 0;
+        connection[i].rcvd_packet_ack = 0;
+        connection[i].rcvd_packet_seq = 0;
+    }
+    printf("Initialization has been done.\n");
 
     dev=pcap_lookupdev(errbuf);
     if(dev==NULL){
@@ -167,7 +389,6 @@ int main(int argc, char *argv[])
     printf("---------packet--------\n");
 
     int id=0;
-
 
     pcap_dumper_t* dumpfp=pcap_dump_open(pcap_handle,"./save1.pcap");
 
