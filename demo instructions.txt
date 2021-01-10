@@ -1,0 +1,2 @@
+1) make (to compile analysis.c)
+2) sudo ./analysis (run analysis)
