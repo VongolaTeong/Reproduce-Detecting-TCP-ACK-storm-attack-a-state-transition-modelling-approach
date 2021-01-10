@@ -147,30 +147,30 @@ void pcap_callback(unsigned char * arg,const struct pcap_pkthdr *packet_header,c
 		if(connection[i].ip[0] == -1){
             printf("%dth item does not been used\n",i);
 			if(flag_send_rcvd == 0){
-                printf("%dth item first send a packet\n",i);
+                //printf("%dth item first send a packet\n",i);
 				connection[i].ip[0] = ip->destIP[0];
-                printf("%dth item ip[0] known\n",i);
+                //printf("%dth item ip[0] known\n",i);
 				connection[i].ip[1] = ip->destIP[1];
-                printf("%dth item ip[1] known\n",i);
+                //printf("%dth item ip[1] known\n",i);
 				connection[i].ip[2] = ip->destIP[2];
-                printf("%dth item ip[2] known\n",i);
+                //printf("%dth item ip[2] known\n",i);
 				connection[i].ip[3] = ip->destIP[3];
-                printf("%dth item ip[3] known\n",i);
+                //printf("%dth item ip[3] known\n",i);
                 connection[i].send_packet_ack = tcp->ack;
                 printf("%dth item send_packet_ack update\n",i);
                 connection[i].send_packet_seq = tcp->seq;  
                 printf("%dth item send_packet_seq update\n",i);              
 			}
 			else{
-                printf("%dth item first receive a packet\n",i);
+                //printf("%dth item first receive a packet\n",i);
 				connection[i].ip[0] = ip->sourceIP[0];
-                printf("%dth item ip[0] known\n",i);
+                //printf("%dth item ip[0] known\n",i);
 				connection[i].ip[1] = ip->sourceIP[1];
-                printf("%dth item ip[1] known\n",i);
+                //printf("%dth item ip[1] known\n",i);
 				connection[i].ip[2] = ip->sourceIP[2];
-                printf("%dth item ip[2] known\n",i);
+                //printf("%dth item ip[2] known\n",i);
 				connection[i].ip[3] = ip->sourceIP[3];
-                printf("%dth item ip[3] known\n",i);
+                //printf("%dth item ip[3] known\n",i);
                 connection[i].rcvd_packet_ack = tcp->ack;
                 printf("%dth item rcvd_packet_ack update\n",i);
                 connection[i].rcvd_packet_seq = tcp->seq;
@@ -191,16 +191,16 @@ void pcap_callback(unsigned char * arg,const struct pcap_pkthdr *packet_header,c
                             {
                             case 0:
                                 connection[i].status = 1;
-                                printf("Status: q1\n");
+                                printf("Status with %d.%d.%d.%d: q1\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
                             case 1:
                                 connection[i].status = 1;
-                                printf("Status: q1\n");
+                                printf("Status with %d.%d.%d.%d: q1\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
                             case 2:
                                 connection[i].status = 1;
                                 connection[i].to_attack = 0;
-                                printf("Status: q1\n");
+                                printf("Status with %d.%d.%d.%d: q1\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
 
                             default:
@@ -208,20 +208,20 @@ void pcap_callback(unsigned char * arg,const struct pcap_pkthdr *packet_header,c
                                 return;
                             }
                         }
-                        if(connection[i].send_packet_seq == connection[i].rcvd_packet_ack)
+                        else if(connection[i].send_packet_seq == connection[i].rcvd_packet_ack)
                         {
                             switch (connection[i].status)
                             {
                             case 0:
-                                printf("Status: q0\n");
+                                printf("Status with %d.%d.%d.%d: q0\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
                             case 1:
-                                printf("Status: q1\n");
+                                printf("Status with %d.%d.%d.%d: q1\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
                             case 2:
                                 connection[i].status = 0;
                                 connection[i].to_attack = 0;
-                                printf("Status: q0\n");
+                                printf("Status with %d.%d.%d.%d: q0\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
 
                             default:
@@ -247,21 +247,21 @@ void pcap_callback(unsigned char * arg,const struct pcap_pkthdr *packet_header,c
                             {
                             case 0:
                                 connection[i].status = 2;
-                                connection[i].status++;
-                                printf("Status: q2\n");
+                                connection[i].to_attack++;
+                                printf("Status with %d.%d.%d.%d: q2\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
                             case 1:
                                 connection[i].status = 2;
-                                connection[i].status++;
-                                printf("Status: q2\n");
+                                connection[i].to_attack++;
+                                printf("Status with %d.%d.%d.%d: q2\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
                             case 2:
-                                connection[i].status++;
-                                if(connection[i].status > 3){
-                                    printf("TCP Ack-storm DoS attack detected!!!!!! \n\n");
+                                connection[i].to_attack++;
+                                if(connection[i].to_attack > 3){
+                                    printf("TCP Ack-storm DoS attack detected in connection with %d.%d.%d.%d!!!!!! \n\n", connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                     return;
                                 }
-                                printf("Status: q2\n");
+                                printf("Status with %d.%d.%d.%d: q2\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
 
                             default:
@@ -270,21 +270,21 @@ void pcap_callback(unsigned char * arg,const struct pcap_pkthdr *packet_header,c
                             }
                         }
                         
-                        if(connection[i].rcvd_packet_ack == connection[i].rcvd_packet_seq)
+                        else if(connection[i].rcvd_packet_ack == connection[i].rcvd_packet_seq)
                         {
                             switch (connection[i].status)
                             {
                             case 0:
-                                printf("Status: q0\n");
+                                printf("Status with %d.%d.%d.%d: q0\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
                             case 1:
                                 connection[i].status = 0;
-                                printf("Status: q0\n");
+                                printf("Status with %d.%d.%d.%d: q0\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
                             case 2:
                                 connection[i].status = 0;
                                 connection[i].to_attack = 0;
-                                printf("Status: q0\n");
+                                printf("Status with %d.%d.%d.%d: q0\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
 
                             default:
@@ -293,21 +293,21 @@ void pcap_callback(unsigned char * arg,const struct pcap_pkthdr *packet_header,c
                             }
                         }
                         
-                        if(connection[i].rcvd_packet_ack < connection[i].rcvd_packet_seq)
+                        else if(connection[i].rcvd_packet_ack < connection[i].rcvd_packet_seq)
                         {
                             switch (connection[i].status)
                             {
                             case 0:
-                                printf("Status: q0\n");
+                                printf("Status with %d.%d.%d.%d: q0\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
                             case 1:
                                 connection[i].status = 0;
-                                printf("Status: q0\n");
+                                printf("Status with %d.%d.%d.%d: q0\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
                             case 2:
                                 connection[i].status = 0;
                                 connection[i].to_attack = 0;
-                                printf("Status: q0\n");
+                                printf("Status with %d.%d.%d.%d: q0\n",connection[i].ip[0], connection[i].ip[1], connection[i].ip[2], connection[i].ip[3]);
                                 break;
 
                             default:
